@@ -23,17 +23,30 @@ def sender(loc):
     client.send(d_name.encode())
     ready=client.recv(1024).decode()
     if ready=='yes':
+        finished=False
+        finished_reading=False
+        file_opened=False
+        
         cont=os.listdir(loc)
+        l=len(cont)
+        it=0
         for c in cont:
+            finished=False
+            finished_reading=False
+            file_opened=False
+            it+=1
             while(not finished):
-                if not file_opended:
+                if not file_opened:
+                    print("file "+c+" created...")
                     f=open(loc+'/'+c,'rb')
                     file_opened=True
                     cab=['1'.encode(),c.encode()]
                     client.send(pickle.dumps(cab))
                 elif not finished_reading:
+                    print(c+" reading...")
                     content=f.read(size)
                     if len(content)==0:
+                        print(c+" finished reading...")
                         finished_reading=True
                     else:
                         cab=['2'.encode(),content]
@@ -43,7 +56,13 @@ def sender(loc):
                     f.close()
                     cab=['3'.encode(),'close file'.encode()]
                     client.send(pickle.dumps(cab))
-    return 0
+
+    if it==l:
+        print('success')
+    else:
+        print('error')
+    print ("finished server suicided")
+
 
 
 
@@ -92,8 +111,11 @@ def rec(home):
         elif prot=='4':
             proc=False
             print("end reached...")
-        cab=pickle.loads(client.recv(r_size))   #error here
-        prot=cab[0].decode()
+        try:
+            cab=pickle.loads(client.recv(r_size))
+            prot=cab[0].decode()
+        except:   
+            prot='3'
     
         
         
